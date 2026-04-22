@@ -1,6 +1,6 @@
 # Licence OCR — Docker Setup
 
-I tried to extract data from a driver licence image with Tesseract OCR, PHP, and docker. I wouldn't recommend it for production as the results are a bit hit and miss, but it was an interesting learning experience. LLMs apparently do a better job, but you can't really give them people's driver licences as they contain sensitive data which would probably be breaking all kinds of privacy laws.
+I tried to extract data from a driver licence image with Tesseract OCR, and PHP. I wouldn't recommend it for production as the results are a bit hit and miss, but it was an interesting learning experience. LLMs apparently do a better job, but you can't really give them people's driver licences as they contain sensitive data which would probably be breaking all kinds of privacy laws.
 
 ## Stack
 - PHP 8.3 + Apache
