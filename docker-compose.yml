@@ -1,0 +1,16 @@
+services:
+  licence-ocr:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount src for live editing during development
+      - ./src:/var/www/html
+      # Persist composer vendor dir
+      - vendor:/var/www/html/vendor
+    environment:
+      - APACHE_LOG_DIR=/var/log/apache2
+    restart: unless-stopped
+
+volumes:
+  vendor:
