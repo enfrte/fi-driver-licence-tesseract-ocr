@@ -1,27 +1,15 @@
 FROM php:8.3-apache
 
-# System deps: Tesseract + ImageMagick + required PHP extension libs
+# System deps: Tesseract only
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-eng \
     tesseract-ocr-fin \
-    imagemagick \
-    libmagickwand-dev \
-    ghostscript \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick \
-    && docker-php-ext-install exif
-
-# ImageMagick policy: allow reading/writing images (locked down by default in Debian)
-# Find policy.xml regardless of ImageMagick version (6 or 7)
-RUN POLICY=$(find /etc/ImageMagick* -name policy.xml 2>/dev/null | head -1) \
-    && if [ -n "$POLICY" ]; then \
-        sed -i 's|rights="none" pattern="PDF"|rights="read|write" pattern="PDF"|' "$POLICY"; \
-    fi
+RUN docker-php-ext-install exif
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

@@ -6,6 +6,8 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
 
 class LicenceOCR
 {
+    private $maxImgSize = 10 * 1024 * 1024; // 10 MB
+    
     private string $tmpDir = '/tmp/ocr/';
 
     public function __construct()
@@ -18,12 +20,9 @@ class LicenceOCR
     public function extract(string $uploadedFilePath): array
     {
         $this->validateFile($uploadedFilePath);
-
         $tmp = $this->tmpDir . uniqid('ocr_', true) . '.jpg';
         copy($uploadedFilePath, $tmp);
-
         $rawText = $this->runTesseract($tmp);
-
         @unlink($tmp);
 
         return $this->parse($rawText);
@@ -32,24 +31,28 @@ class LicenceOCR
     private function validateFile(string $path): void
     {
         $realPath = realpath($path);
+        
         if ($realPath === false) {
             throw new \RuntimeException('Invalid file path');
         }
 
         $mime = mime_content_type($realPath);
-        $allowed = ['image/jpeg', 'image/png', 'image/tiff', 'image/webp'];
-        if (!in_array($mime, $allowed, true)) {
+        $allowed = 'image/jpeg';
+        
+        if ( $mime !== $allowed ) {
             throw new \RuntimeException('Invalid file type: ' . $mime);
         }
 
-        if (filesize($realPath) > 10 * 1024 * 1024) {
+        if (filesize($realPath) > $this->maxImgSize) {
             throw new \RuntimeException('File too large');
         }
     }
-
+   
     private function runTesseract(string $imagePath): string
     {
         try {
+            // After some playing around with Tesseract settings, this combination seems to give the best results for Finnish licences. 
+            // Adjust as needed for other languages or licence formats.
             return (new TesseractOCR($imagePath))
                 ->lang('eng', 'fin')
                 ->psm(3)
@@ -120,7 +123,7 @@ class LicenceOCR
     // Given names (2.) — between "2," or "2." and "3."
     private function extractGivenNames(string $text): ?string
     {
-        if (preg_match('/2[,.]\s*([A-Za-zÄÖÅäöå\s\-]+?)\s+3\./', $text, $m)) {
+        if (preg_match('/2[,.]\s*([\p{L}\s\-]+?)\s+3\./u', $text, $m)) {
             return trim($m[1]);
         }
         return null;
@@ -130,7 +133,7 @@ class LicenceOCR
     // e.g. "3. 12.04.1985, UK" or "3. 12.04.1985 FIN"
     private function extractDobPlace(string $text): ?string
     {
-        if (preg_match('/3\.\s*[\d.\s]+[,\s]+([A-ZÄÖÅa-zäöå\-]{2,})\s/', $text, $m)) {
+        if (preg_match('/3\.\s*[\d.\s]+[,\s]+([\p{L}\-]{2,})\b/u', $text, $m)) {
             return trim($m[1]);
         }
         return null;

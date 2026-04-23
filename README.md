@@ -2,10 +2,13 @@
 
 I tried to extract data from a driver licence image with Tesseract OCR, and PHP. I wouldn't recommend it for production as the results are a bit hit and miss, but it was an interesting learning experience. LLMs apparently do a better job, but you can't really give them people's driver licences as they contain sensitive data which would probably be breaking all kinds of privacy laws.
 
+## How does it work 
+
+Tesseract OCR will read the licence and return a "raw" string of alphanumeric text. You then use regex to parse and structure this text. Reportedly you could improve the result by processing the image with ImageMagick beforehand, but I found that it had the opposite effect with the recommended edits. When I asked AI why this might be, it said that newer Tesseract training and better cameras might now favor original images. 
+
 ## Stack
 - PHP 8.3 + Apache
 - Tesseract OCR (eng + fin language packs)
-- ImageMagick (image preprocessing - currently removed functionality because of some issue)
 - thiagoalessio/tesseract_ocr wrapper
 
 ## Build & run
@@ -60,6 +63,5 @@ docker compose up --build
 
 ## Notes
 
-- `/tmp/ocr/` inside the container is used for ImageMagick preprocessed images — auto-cleaned after each request
 - Upload limit: 20MB (set in php.ini via Dockerfile)
 - Regex patterns in `LicenceOCR::parse()` target EU standard field numbering (1. surname, 2. given names, 3. DOB, etc.) — adjust per country layout
